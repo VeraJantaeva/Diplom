@@ -1,0 +1,29 @@
+shop: ЭлектроникаМаркет
+categories:
+  - id: 1
+    name: Смартфоны
+  - id: 2
+    name: Ноутбуки
+goods:
+  - id: 1
+    name: iPhone 14
+    category: 1
+    model: A2882
+    price: 79990
+    price_rrc: 84990
+    quantity: 15
+    parameters:
+      дисплей: 6.1" Super Retina XDR
+      память: 128GB
+      цвет: черный
+  - id: 2
+    name: MacBook Air
+    category: 2
+    model: M2
+    price: 119990
+    price_rrc: 129990
+    quantity: 8
+    parameters:
+      экран: 13.6" Liquid Retina
+      память: 256GB SSD
+      процессор: Apple M2

@@ -1,0 +1,9 @@
+{
+    "python.analysis.extraPaths": [
+        "./venv/Lib/site-packages",
+        "./venv/lib/python3.*/site-packages"
+    ],
+    "python.analysis.autoSearchPaths": true,
+    "python.analysis.diagnosticMode": "openFilesOnly",
+    "python.analysis.ignore": ["distutils"]
+}
