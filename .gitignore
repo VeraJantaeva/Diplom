@@ -1,0 +1,128 @@
+# =====================
+# Environments & IDEs
+# =====================
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.idea/
+.vscode/
+.spyderproject
+.spyproject
+.ropeproject
+*.swp
+*.swo
+
+# =====================
+# Python
+# =====================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# PyInstaller
+*.manifest
+*.spec
+
+# mypy
+.mypy_cache/
+
+# pytest
+.pytest_cache/
+
+# =====================
+# Django
+# =====================
+# Database
+db.sqlite3
+*.db
+
+# Logs
+*.log
+
+# Local settings
+local_settings.py
+
+# Static files (if not committed)
+staticfiles/
+media/
+
+# Migration files (optional - be careful!)
+# */migrations/*
+
+# =====================
+# Testing & Documentation
+# =====================
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+
+# Sphinx documentation
+docs/_build/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# mkdocs documentation
+/site
+
+# =====================
+# Environment variables
+# =====================
+.env
+.env.local
+
+# =====================
+# Other
+# =====================
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# SageMath parsed files
+*.sage.py
+
+# Scrapy
+.scrapy
+
+# PyBuilder
+target/
