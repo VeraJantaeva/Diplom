@@ -137,12 +137,16 @@ class AccountDetails(APIView):
                 request.user.set_password(request.data["password"])
                 request.user.save()
 
-        user_serializer = UserSerializer(request.user, data=request.data, partial=True)
+        user_serializer = UserSerializer(
+            request.user, data=request.data, partial=True
+        )
         if user_serializer.is_valid():
             user_serializer.save()
             return JsonResponse({"Status": True})
         else:
-            return JsonResponse({"Status": False, "Errors": user_serializer.errors})
+            return JsonResponse(
+                {"Status": False, "Errors": user_serializer.errors}
+            )
 
 
 class LoginAccount(APIView):
@@ -233,7 +237,9 @@ class BasketView(APIView):
     def get(self, request, *args, **kwargs):
         basket = (
             Order.objects.filter(user_id=request.user.id, status="basket")
-            .prefetch_related("ordered_items__product__category", "ordered_items__shop")
+            .prefetch_related(
+                "ordered_items__product__category", "ordered_items__shop"
+            )
             .annotate(
                 total_sum=Sum(
                     F("ordered_items__quantity")
@@ -270,7 +276,9 @@ class BasketView(APIView):
                         try:
                             serializer.save()
                         except IntegrityError as error:
-                            return JsonResponse({"Status": False, "Errors": str(error)})
+                            return JsonResponse(
+                                {"Status": False, "Errors": str(error)}
+                            )
                         else:
                             objects_created += 1
                     else:
@@ -301,7 +309,9 @@ class BasketView(APIView):
 
             if objects_deleted:
                 deleted_count = OrderItem.objects.filter(query).delete()[0]
-                return JsonResponse({"Status": True, "Удалено объектов": deleted_count})
+                return JsonResponse(
+                    {"Status": True, "Удалено объектов": deleted_count}
+                )
         return JsonResponse(
             {"Status": False, "Errors": "Не указаны все необходимые аргументы"}
         )
@@ -390,8 +400,8 @@ class PartnerUpdate(APIView):
                         )
 
                         for name, value in item["parameters"].items():
-                            parameter_object, _ = Parameter.objects.get_or_create(
-                                name=name
+                            parameter_object, _ = (
+                                Parameter.objects.get_or_create(name=name)
                             )
                             ProductParameter.objects.create(
                                 product_info_id=product_info.id,
@@ -432,7 +442,9 @@ class PartnerState(APIView):
             serializer = ShopSerializer(shop)
             return Response(serializer.data)
         else:
-            return JsonResponse({"Status": False, "Error": "Магазин не найден"})
+            return JsonResponse(
+                {"Status": False, "Error": "Магазин не найден"}
+            )
 
     def post(self, request, *args, **kwargs):
         if request.user.type != "shop":
@@ -473,7 +485,9 @@ class PartnerOrders(APIView):
                 ordered_items__product_info__shop__user_id=request.user.id
             )
             .exclude(status="basket")
-            .prefetch_related("ordered_items__product__category", "ordered_items__shop")
+            .prefetch_related(
+                "ordered_items__product__category", "ordered_items__shop"
+            )
             .select_related("contact")
             .annotate(
                 total_sum=Sum(
@@ -510,7 +524,9 @@ class ContactView(APIView):
                 serializer.save()
                 return JsonResponse({"Status": True})
             else:
-                return JsonResponse({"Status": False, "Errors": serializer.errors})
+                return JsonResponse(
+                    {"Status": False, "Errors": serializer.errors}
+                )
 
         return JsonResponse(
             {"Status": False, "Errors": "Не указаны все необходимые аргументы"}
@@ -529,7 +545,9 @@ class ContactView(APIView):
 
             if objects_deleted:
                 deleted_count = Contact.objects.filter(query).delete()[0]
-                return JsonResponse({"Status": True, "Удалено объектов": deleted_count})
+                return JsonResponse(
+                    {"Status": True, "Удалено объектов": deleted_count}
+                )
         return JsonResponse(
             {"Status": False, "Errors": "Не указаны все необходимые аргументы"}
         )
@@ -541,12 +559,16 @@ class ContactView(APIView):
                 id=contact_id, user_id=request.user.id
             ).first()
             if contact:
-                serializer = ContactSerializer(contact, data=request.data, partial=True)
+                serializer = ContactSerializer(
+                    contact, data=request.data, partial=True
+                )
                 if serializer.is_valid():
                     serializer.save()
                     return JsonResponse({"Status": True})
                 else:
-                    return JsonResponse({"Status": False, "Errors": serializer.errors})
+                    return JsonResponse(
+                        {"Status": False, "Errors": serializer.errors}
+                    )
 
         return JsonResponse(
             {"Status": False, "Errors": "Не указаны все необходимые аргументы"}
@@ -564,7 +586,9 @@ class OrderView(APIView):
         orders = (
             Order.objects.filter(user_id=request.user.id)
             .exclude(status="basket")
-            .prefetch_related("ordered_items__product__category", "ordered_items__shop")
+            .prefetch_related(
+                "ordered_items__product__category", "ordered_items__shop"
+            )
             .select_related("contact")
             .annotate(
                 total_sum=Sum(
@@ -598,11 +622,15 @@ class OrderView(APIView):
                         order.status = "new"
                         order.save()
 
-                        new_order.send(sender=self.__class__, user_id=request.user.id)
+                        new_order.send(
+                            sender=self.__class__, user_id=request.user.id
+                        )
                         return JsonResponse({"Status": True})
 
                 except Order.DoesNotExist:
-                    return JsonResponse({"Status": False, "Errors": "Заказ не найден"})
+                    return JsonResponse(
+                        {"Status": False, "Errors": "Заказ не найден"}
+                    )
                 except IntegrityError:
                     return JsonResponse(
                         {

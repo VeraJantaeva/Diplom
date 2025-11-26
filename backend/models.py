@@ -26,23 +26,17 @@ USER_TYPE_CHOICES = (
     ("buyer", "Покупатель"),
 )
 
-CONTACT_TYPE_CHOICES = (
-    ("phone", "Телефон"),
-    ("address", "Адрес"),
-    ("email", "Email"),
-)
-
 
 class UserManager(BaseUserManager):
     """
-    Миксин для управления пользователями
+    Миксин для управления пользователями.
     """
 
     use_in_migrations = True
 
     def _create_user(self, email, password, **extra_fields):
         """
-        Create and save a user with the given username, email, and password.
+        Создание и сохранение пользователя с email и паролем.
         """
         if not email:
             raise ValueError("The given email must be set")
@@ -71,7 +65,7 @@ class UserManager(BaseUserManager):
 
 class User(AbstractUser):
     """
-    Стандартная модель пользователей
+    Стандартная модель пользователей.
     """
 
     REQUIRED_FIELDS = []
@@ -121,6 +115,39 @@ class User(AbstractUser):
         ordering = ("email",)
 
 
+class Contact(models.Model):
+    """
+    Модель контактных данных для доставки.
+    """
+
+    user = models.ForeignKey(
+        User,
+        verbose_name="Пользователь",
+        related_name="contacts",
+        on_delete=models.CASCADE,
+    )
+    city = models.CharField(verbose_name="Город", max_length=50)
+    street = models.CharField(verbose_name="Улица", max_length=100)
+    house = models.CharField(verbose_name="Дом", max_length=15, blank=True)
+    structure = models.CharField(
+        verbose_name="Корпус", max_length=15, blank=True
+    )
+    building = models.CharField(
+        verbose_name="Строение", max_length=15, blank=True
+    )
+    apartment = models.CharField(
+        verbose_name="Квартира", max_length=15, blank=True
+    )
+    phone = models.CharField(verbose_name="Телефон", max_length=20)
+
+    class Meta:
+        verbose_name = "Контакт"
+        verbose_name_plural = "Список контактов"
+
+    def __str__(self):
+        return f"{self.city}, {self.street}, {self.house}"
+
+
 class Shop(models.Model):
     name = models.CharField(max_length=50, verbose_name="Название")
     url = models.URLField(verbose_name="Ссылка", null=True, blank=True)
@@ -132,7 +159,7 @@ class Shop(models.Model):
         on_delete=models.CASCADE,
     )
     state = models.BooleanField(
-        verbose_name="статус получения заказов", default=True
+        verbose_name="Статус получения заказов", default=True
     )
 
     class Meta:
@@ -147,10 +174,7 @@ class Shop(models.Model):
 class Category(models.Model):
     name = models.CharField(max_length=40, verbose_name="Название")
     shops = models.ManyToManyField(
-        Shop,
-        verbose_name="Магазины",
-        related_name="categories",
-        blank=True
+        Shop, verbose_name="Магазины", related_name="categories", blank=True
     )
 
     class Meta:
@@ -168,7 +192,6 @@ class Product(models.Model):
         Category,
         verbose_name="Категория",
         related_name="products",
-        blank=True,
         on_delete=models.CASCADE,
     )
 
@@ -182,22 +205,18 @@ class Product(models.Model):
 
 
 class ProductInfo(models.Model):
-    model = models.CharField(
-        max_length=80, verbose_name="Модель", blank=True
-    )
+    model = models.CharField(max_length=80, verbose_name="Модель", blank=True)
     external_id = models.PositiveIntegerField(verbose_name="Внешний ИД")
     product = models.ForeignKey(
         Product,
         verbose_name="Продукт",
         related_name="product_infos",
-        blank=True,
         on_delete=models.CASCADE,
     )
     shop = models.ForeignKey(
         Shop,
         verbose_name="Магазин",
         related_name="product_infos",
-        blank=True,
         on_delete=models.CASCADE,
     )
     quantity = models.PositiveIntegerField(verbose_name="Количество")
@@ -237,14 +256,12 @@ class ProductParameter(models.Model):
         ProductInfo,
         verbose_name="Информация о продукте",
         related_name="product_parameters",
-        blank=True,
         on_delete=models.CASCADE,
     )
     parameter = models.ForeignKey(
         Parameter,
         verbose_name="Параметр",
         related_name="product_parameters",
-        blank=True,
         on_delete=models.CASCADE,
     )
     value = models.CharField(verbose_name="Значение", max_length=100)
@@ -263,38 +280,26 @@ class ProductParameter(models.Model):
         return f"{self.parameter.name}: {self.value}"
 
 
-class Contact(models.Model):
-    user = models.ForeignKey(
-        User,
-        verbose_name="Пользователь",
-        related_name="contacts",
-        blank=True,
-        on_delete=models.CASCADE,
-    )
-    type = models.CharField(
-        verbose_name="Тип контакта",
-        choices=CONTACT_TYPE_CHOICES,
-        max_length=10,
-    )
-    value = models.CharField(verbose_name="Значение", max_length=255)
-
-    class Meta:
-        verbose_name = "Контакт"
-        verbose_name_plural = "Список контактов"
-
-    def __str__(self):
-        return f"{self.get_type_display()}: {self.value}"
-
-
 class Order(models.Model):
+    """
+    Модель заказа с исправленной связью с контактами доставки.
+    """
+
     user = models.ForeignKey(
         User,
         verbose_name="Пользователь",
         related_name="orders",
-        blank=True,
         on_delete=models.CASCADE,
     )
-    dt = models.DateTimeField(auto_now_add=True)
+    contact = models.ForeignKey(
+        Contact,
+        verbose_name="Контакт доставки",
+        related_name="orders",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+    dt = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     status = models.CharField(
         verbose_name="Статус", choices=STATE_CHOICES, max_length=15
     )
@@ -312,100 +317,95 @@ class Order(models.Model):
         ]
 
     def __str__(self):
-        return (
-            f'Заказ #{self.id} от '
-            f'{self.dt.strftime("%d.%m.%Y %H:%M")}'
-        )
+        return f"Заказ #{self.id} от {self.dt.strftime('%d.%m.%Y %H:%M')}"
 
     def get_total_cost(self):
         """
-        Дополнительный метод для расчета общей стоимости заказа
+        Расчет общей стоимости заказа.
         """
-        return sum(
-            item.get_cost()
-            for item in self.ordered_items.select_related(
-                "product", "shop"
-            ).all()
-        )
+        return sum(item.get_cost() for item in self.ordered_items.all())
 
     def save(self, *args, **kwargs):
-        if not self.id and self.status != "basket":
+        """
+        Автоматическая установка статуса 'basket' для новых заказов.
+        """
+        if not self.id and not self.status:
             self.status = "basket"
         super().save(*args, **kwargs)
 
 
 class OrderItem(models.Model):
+    """
+    Модель элемента заказа с прямой связью с ProductInfo.
+    """
+
     order = models.ForeignKey(
         Order,
         verbose_name="Заказ",
         related_name="ordered_items",
-        blank=True,
         on_delete=models.CASCADE,
     )
-    product = models.ForeignKey(
-        Product,
-        verbose_name="Продукт",
-        related_name="order_items",
-        blank=True,
+    product_info = models.ForeignKey(
+        ProductInfo,
+        verbose_name="Информация о продукте",
+        related_name="ordered_items",
         on_delete=models.CASCADE,
     )
-    shop = models.ForeignKey(
-        Shop,
-        verbose_name="Магазин",
-        related_name="order_items",
-        blank=True,
-        on_delete=models.CASCADE,
+    quantity = models.PositiveIntegerField(
+        verbose_name="Количество", default=1
     )
-    quantity = models.PositiveIntegerField(verbose_name="Количество")
 
     class Meta:
         verbose_name = "Заказанная позиция"
         verbose_name_plural = "Список заказанных позиций"
         constraints = [
             models.UniqueConstraint(
-                fields=["order", "product", "shop"],
-                name="unique_order_item"
+                fields=["order", "product_info"], name="unique_order_item"
             ),
         ]
 
     def clean(self):
         """
-        Валидация данных
+        Валидация данных.
         """
         if self.quantity <= 0:
             raise ValidationError(
                 {"quantity": "Количество должно быть положительным числом"}
             )
 
+        # Проверка доступного количества
+        if (
+            self.product_info.quantity < self.quantity
+            and self.order.status != "basket"
+        ):
+            raise ValidationError(
+                {
+                    "quantity": f"Недостаточно товара в наличии. "
+                    f"Доступно: {self.product_info.quantity}"
+                }
+            )
+
     def save(self, *args, **kwargs):
         """
-        Вызов валидации при сохранении
+        Вызов валидации при сохранении.
         """
         self.clean()
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.product.name} x {self.quantity}"
+        return f"{self.product_info.product.name} x {self.quantity}"
 
     def get_cost(self):
         """
-        Дополнительный метод для расчета стоимости позиции
+        Расчет стоимости позиции заказа.
         """
-        product_info = ProductInfo.objects.filter(
-            product=self.product, shop=self.shop
-        ).first()
-        return product_info.price * self.quantity if product_info else 0
+        return self.product_info.price * self.quantity
 
 
 class ConfirmEmailToken(models.Model):
-    class Meta:
-        verbose_name = "Токен подтверждения Email"
-        verbose_name_plural = "Токены подтверждения Email"
-
-    @staticmethod
-    def generate_key():
-        """generates a pseudo random code using os.urandom and binascii.hexlify"""
-        return get_token_generator().generate_token()
+    """
+    Модель токена для подтверждения email.
+    """
 
     user = models.ForeignKey(
         User,
@@ -415,14 +415,19 @@ class ConfirmEmailToken(models.Model):
             "The User which is associated to this password reset token"
         ),
     )
-
     created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name=_("When was this token generated")
+        auto_now_add=True, verbose_name=_("When was this token generated")
     )
-
-    # Key field, though it is not the primary key of the model
     key = models.CharField(_("Key"), max_length=64, db_index=True, unique=True)
+
+    class Meta:
+        verbose_name = "Токен подтверждения Email"
+        verbose_name_plural = "Токены подтверждения Email"
+
+    @staticmethod
+    def generate_key():
+        """Генерация псевдослучайного кода."""
+        return get_token_generator().generate_token()
 
     def save(self, *args, **kwargs):
         if not self.key:
@@ -430,13 +435,13 @@ class ConfirmEmailToken(models.Model):
         return super(ConfirmEmailToken, self).save(*args, **kwargs)
 
     def __str__(self):
-        return "Password reset token for user {user}".format(user=self.user)
+        return f"Password reset token for user {self.user}"
 
 
 @receiver(post_save, sender=Order)
 def order_created(sender, instance, created, **kwargs):
     """
-    Отправка email при создании нового заказа
+    Отправка email при создании нового заказа.
     """
     try:
         if created and instance.status != "basket":
@@ -451,18 +456,19 @@ def order_created(sender, instance, created, **kwargs):
                 fail_silently=False,
             )
     except Exception as e:
-        # Логируйте ошибку вместо молчаливого провала
         print(f"Ошибка отправки email для заказа {instance.id}: {e}")
 
 
 @receiver(post_save, sender=Order)
 def order_status_changed(sender, instance, **kwargs):
     """
-    Отправка email при изменении статуса заказа
+    Отправка email при изменении статуса заказа.
     """
     try:
-        if (instance.tracker.has_changed("status")
-                and instance.status != "basket"):
+        if (
+            instance.tracker.has_changed("status")
+            and instance.status != "basket"
+        ):
             send_mail(
                 f"Статус заказа #{instance.id} изменен",
                 (
@@ -474,7 +480,6 @@ def order_status_changed(sender, instance, **kwargs):
                 fail_silently=False,
             )
     except Exception as e:
-        # Логируйте ошибку вместо молчаливого провала
         print(
             f"Ошибка отправки email при изменении статуса "
             f"заказа {instance.id}: {e}"
@@ -484,22 +489,20 @@ def order_status_changed(sender, instance, **kwargs):
 @receiver(post_save, sender=User)
 def user_registered(sender, instance, created, **kwargs):
     """
-    Отправка email с подтверждением регистрации
+    Отправка email с подтверждением регистрации.
     """
     try:
-        if (created and not instance.is_active):
-            # Отправляем email только для неактивных пользователей
+        if created and not instance.is_active:
             token = ConfirmEmailToken.objects.create(user=instance)
-
             send_mail(
                 "Подтверждение регистрации",
-                f"Для подтверждения регистрации используйте токен: {token.key}",
+                "Для подтверждения регистрации "
+                f"используйте токен: {token.key}",
                 settings.EMAIL_HOST_USER,
                 [instance.email],
                 fail_silently=False,
             )
     except Exception as e:
-        # Логируйте ошибку вместо молчаливого провала
         print(
             f"Ошибка отправки email подтверждения для "
             f"пользователя {instance.email}: {e}"

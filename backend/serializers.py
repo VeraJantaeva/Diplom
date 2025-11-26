@@ -157,7 +157,9 @@ class OrderSerializer(serializers.ModelSerializer):
 
 
 class UserRegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, style={"input_type": "password"})
+    password = serializers.CharField(
+        write_only=True, style={"input_type": "password"}
+    )
     password_confirm = serializers.CharField(
         write_only=True, style={"input_type": "password"}
     )
@@ -195,7 +197,9 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         password = validated_data.pop("password")
         user = User.objects.create(**validated_data)
         user.set_password(password)
-        user.is_active = False  # Пользователь не активен до подтверждения email
+        user.is_active = (
+            False  # Пользователь не активен до подтверждения email
+        )
         user.save()
         return user
 

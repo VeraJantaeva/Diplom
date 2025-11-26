@@ -14,7 +14,9 @@ new_order = Signal()
 
 
 @receiver(reset_password_token_created)
-def password_reset_token_created(sender, instance, reset_password_token, **kwargs):
+def password_reset_token_created(
+    sender, instance, reset_password_token, **kwargs
+):
     """
     Отправляем письмо с токеном для сброса пароля
     """
@@ -39,7 +41,8 @@ def new_user_registered_signal(
     sender: Type[User], instance: User, created: bool, **kwargs
 ):
     """
-    Отправляем письмо с подтверждением почты при регистрации нового пользователя
+    Отправляем письмо с подтверждением почты
+    при регистрации нового пользователя
     """
     if created and not instance.is_active:
         try:
@@ -48,7 +51,8 @@ def new_user_registered_signal(
                 # title:
                 f"Подтверждение email для {instance.email}",
                 # message:
-                f"Для подтверждения вашего email используйте этот токен: {token.key}",
+                f"Для подтверждения вашего email"
+                f"используйте этот токен: {token.key}",
                 # from:
                 settings.EMAIL_HOST_USER,
                 # to:
@@ -74,7 +78,8 @@ def new_order_signal(sender, **kwargs):
             # title:
             "Новый заказ создан",
             # message:
-            "Ваш заказ был успешно создан и находится в обработке. Мы свяжемся с вами в ближайшее время.",
+            "Ваш заказ был успешно создан и находится в обработке. "
+            "Мы свяжемся с вами в ближайшее время.",
             # from:
             settings.EMAIL_HOST_USER,
             # to:
@@ -94,12 +99,15 @@ def order_status_changed_signal(sender, instance, created, **kwargs):
     """
     if not created:
         try:
-            if hasattr(instance, "tracker") and instance.tracker.has_changed("status"):
+            if hasattr(instance, "tracker") and instance.tracker.has_changed(
+                "status"
+            ):
                 msg = EmailMultiAlternatives(
                     # title:
                     f"Обновление статуса заказа #{instance.id}",
                     # message:
-                    f"Статус вашего заказа #{instance.id} изменен на: {instance.get_status_display()}",
+                    f"Статус вашего заказа #{instance.id} "
+                    f"изменен на: {instance.get_status_display()}",
                     # from:
                     settings.EMAIL_HOST_USER,
                     # to:
