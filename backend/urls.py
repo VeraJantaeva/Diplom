@@ -3,7 +3,6 @@ from django_rest_passwordreset.views import (
     reset_password_confirm,
     reset_password_request_token,
 )
-from rest_framework.routers import DefaultRouter
 
 from backend.views import (
     AccountDetails,
@@ -23,18 +22,19 @@ from backend.views import (
 
 app_name = "backend"
 
-# Создаем router для API v1
-router = DefaultRouter()
-router.register(r"shops", ShopView, basename="shop")
-router.register(r"categories", CategoryView, basename="category")
-router.register(r"products", ProductInfoView, basename="product")
-router.register(r"basket", BasketView, basename="basket")
-router.register(r"orders", OrderView, basename="order")
-router.register(r"contacts", ContactView, basename="contact")
-
 urlpatterns = [
-    # API v1 с использованием router
-    path("v1/", include(router.urls)),
+    # Магазины
+    path("v1/shops/", ShopView.as_view(), name="shops"),
+    # Категории
+    path("v1/categories/", CategoryView.as_view(), name="categories"),
+    # Товары
+    path("v1/products/", ProductInfoView.as_view(), name="products"),
+    # Корзина
+    path("v1/basket/", BasketView.as_view(), name="basket"),
+    # Заказы
+    path("v1/orders/", OrderView.as_view(), name="orders"),
+    # Контакты
+    path("v1/contacts/", ContactView.as_view(), name="contacts"),
     # Партнерские endpoints
     path("v1/partner/update/", PartnerUpdate.as_view(), name="partner-update"),
     path("v1/partner/state/", PartnerState.as_view(), name="partner-state"),

@@ -19,10 +19,6 @@ from backend.models import (
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
-    """
-    Панель управления пользователями
-    """
-
     model = User
 
     fieldsets = (
@@ -86,7 +82,8 @@ class ShopAdmin(admin.ModelAdmin):
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ("name",)
     search_fields = ("name",)
-    prepopulated_fields = {"slug": ("name",)}  # если есть поле slug
+    # Закомментируйте если нет поля slug
+    # prepopulated_fields = {"slug": ("name",)}
 
 
 @admin.register(Product)
@@ -122,8 +119,8 @@ class ProductParameterAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "state", "dt", "total_amount")
-    list_filter = ("state", "dt")
+    list_display = ("id", "user", "status", "dt", "contact", "total_amount")
+    list_filter = ("status", "dt")
     search_fields = (
         "user__email",
         "user__first_name",
@@ -131,16 +128,44 @@ class OrderAdmin(admin.ModelAdmin):
         "id",
     )
     raw_id_fields = ("user",)
-    list_editable = ("state",)
+    list_editable = ("status",)
     date_hierarchy = "dt"
+    
+    def total_amount(self, obj):
+        total = 0
+        for item in obj.ordered_items.all():
+            if hasattr(item, 'product_info') and item.product_info:
+                total += item.quantity * item.product_info.price
+        return f"{total:.2f}"
+    total_amount.short_description = 'Total Amount'
 
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
-    list_display = ("order", "product_info", "quantity", "price")
-    list_filter = ("order__state",)
+    # Основные поля модели OrderItem
+    list_display = ("order", "product_info", "quantity", "product_display", "shop_display", "price_display")
+    list_filter = ("order__status",)
     search_fields = ("order__id", "product_info__product__name")
     raw_id_fields = ("order", "product_info")
+    
+    # Методы для отображения связанных данных
+    def product_display(self, obj):
+        if obj.product_info and obj.product_info.product:
+            return obj.product_info.product.name
+        return "N/A"
+    product_display.short_description = 'Product'
+    
+    def shop_display(self, obj):
+        if obj.product_info and obj.product_info.shop:
+            return obj.product_info.shop.name
+        return "N/A"
+    shop_display.short_description = 'Shop'
+    
+    def price_display(self, obj):
+        if obj.product_info:
+            return obj.product_info.price
+        return "N/A"
+    price_display.short_description = 'Price'
 
 
 @admin.register(Contact)
@@ -163,6 +188,5 @@ class ConfirmEmailTokenAdmin(admin.ModelAdmin):
     raw_id_fields = ("user",)
     readonly_fields = ("created_at",)
 
-    # Запрещаем изменение токенов (только просмотр и удаление)
     def has_change_permission(self, request, obj=None):
         return False
